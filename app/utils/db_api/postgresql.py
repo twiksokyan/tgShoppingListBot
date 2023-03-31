@@ -28,9 +28,9 @@ class Database:
                 if fetch:
                     result = await connection.fetch(query, *args)
                 elif fetchval:
-                    result = connection.fetchval(query, *args)
+                    result = await connection.fetchval(query, *args)
                 elif fetchrow:
-                    result = connection.fetchrow(query, *args)
+                    result = await connection.fetchrow(query, *args)
                 elif execute:
                     result = await connection.execute(query, *args)
 
@@ -69,7 +69,7 @@ class Database:
     async def create_table_users_lists(self):
         query = """
         CREATE TABLE IF NOT EXISTS USERS_LISTS (
-        LIST_ID SERIAL PRIMARY KEY,
+        LIST_ID SERIAL,
         TG_ID BIGINT NOT NULL,
         LIST_OWNER BOOLEAN DEFAULT FALSE,
         CREATED_DTTM TIMESTAMP DEFAULT DATE_TRUNC('second', localtimestamp)
@@ -88,23 +88,23 @@ class Database:
 
         return await self.execute_query(query, tg_id, fetchrow=True)
 
-    async def add_user_to_list(self, tg_id):
+    async def add_user_to_list(self, tg_id, list_id):
         """Добавляем участника в список (Он сам будет добавляться после вызова команды)"""
         query = """
-        INSERT INTO USERS_LISTS (TG_ID)
-        VALUES ($1)
+        INSERT INTO USERS_LISTS (TG_ID, LIST_ID)
+        VALUES ($1, $2)
         RETURNING *
         """
 
-        return await self.execute_query(query, tg_id, fetchrow=True)
+        return await self.execute_query(query, tg_id, list_id, fetchrow=True)
 
-    async def list_owner_check(self, tg_id):
-        """Проверка на владельца списка"""
-        query = """
-        SELECT LIST_OWNER FROM USERS_LISTS WHERE TG_ID = $1
-        """
-
-        return await self.execute_query(query, tg_id, fetchval=True)
+    # async def list_owner_check(self, tg_id):
+    #     """Проверка на владельца списка"""
+    #     query = """
+    #     SELECT LIST_OWNER FROM USERS_LISTS WHERE TG_ID = $1
+    #     """
+    #
+    #     return await self.execute_query(query, tg_id, fetchval=True)
 
     async def get_list_id(self, tg_id):
         query = """
@@ -112,6 +112,27 @@ class Database:
         """
 
         return await self.execute_query(query, tg_id, fetchval=True)
+
+    async def count_user_lists(self, tg_id):
+        query = """
+        SELECT COUNT(LIST_ID) FROM USERS_LISTS WHERE TG_ID = $1
+        """
+
+        return await self.execute_query(query, tg_id, fetchval=True)
+
+    async def get_list_users(self, tg_id):
+        """Выбираем всех пользователей списка по любому пользователю из этого списка"""
+        list_id = await self.get_list_id(tg_id)
+
+        query = """
+        SELECT UL.TG_ID, U.TG_USERNAME, U.FULL_NAME
+        FROM USERS_LISTS UL
+        JOIN USERS U
+            ON UL.TG_ID = U.TG_ID
+        WHERE UL.LIST_ID = $1 AND UL.TG_ID != $2
+        """
+
+        return await self.execute_query(query, list_id, tg_id, fetch=True)
 
     async def delete_user_from_list(self, tg_id):
         """Удаление участника списка"""
@@ -122,20 +143,20 @@ class Database:
 
         return await self.execute_query(query, tg_id, fetchrow=True)
 
-    async def delete_list(self, tg_id):
-        """Удаление списка. Может сделать только админ"""
-        query_find = """
-        SELECT LIST_ID FROM USERS_LISTS WHERE TG_ID = $1
-        """
-        list_id_for_delete = await self.execute_query(query_find, tg_id, fetchval=True)
-
-        if list_id_for_delete:
-            query_del = """
-            DELETE FROM USERS_LISTS WHERE LIST_ID = $1
-            """
-            await self.execute_query(query_del, list_id_for_delete, execute=True)
-        else:
-            return -1
+    # async def delete_list(self, tg_id):
+    #     """Удаление списка. Может сделать только админ"""
+    #     query_find = """
+    #     SELECT LIST_ID FROM USERS_LISTS WHERE TG_ID = $1
+    #     """
+    #     list_id_for_delete = await self.execute_query(query_find, tg_id, fetchval=True)
+    #
+    #     if list_id_for_delete:
+    #         query_del = """
+    #         DELETE FROM USERS_LISTS WHERE LIST_ID = $1
+    #         """
+    #         await self.execute_query(query_del, list_id_for_delete, execute=True)
+    #     else:
+    #         return -1
 
     # Таблица наполнения списка покупок
     async def create_table_shopping_lists(self):
@@ -164,9 +185,10 @@ class Database:
         """Удаления пункта списка"""
         query = """
         DELETE FROM SHOPPING_LISTS WHERE ITEM_ID = $1
+        RETURNING*
         """
 
-        await self.execute_query(query, item_id, execute=True)
+        return await self.execute_query(query, item_id, fetchrow=True)
 
     async def get_all_list(self, list_id):
         """Достать все товары из списка"""
