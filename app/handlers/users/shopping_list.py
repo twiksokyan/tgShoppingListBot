@@ -18,11 +18,12 @@ async def create_new_list(message: types.Message):
             text='\n'.join([
                 f'Ты создал новый список!🥳',
                 f'',
-                f'По моей идеологии, чтобы начать пользоваться списком, тебе надо пригласить'
+                f'Чтобы начать пользоваться списком, тебе надо пригласить'
                 f' человека или людей, с кем ты планируешь составлять общий список покупок.',
                 f'Для этого воспользуйся командой <code>/invite</code>.',
                 f'',
-                f'Полученное после команды <code>/invite</code> сообщение перешли тому, кого хочешь пригласить присоединиться к общему списку покупок.'
+                f'Полученное после команды <code>/invite</code> сообщение перешли тому, кого хочешь пригласить '
+                f'присоединиться к общему списку покупок.'
             ])
         )
         #уведомляем админа
@@ -45,7 +46,7 @@ async def create_new_list(message: types.Message):
                           ' или пригласить новых участников командой <code>/invite</code>'
         await message.answer(
             text='\n'.join([
-                'Не могу создать список для тебя😔',
+                'Не могу создать список для тебя.',
                 f'❗Ты {answer_part}'
             ])
         )
@@ -75,7 +76,7 @@ async def invite_mate(message: types.Message):
     else:
         await message.answer(
             text='\n'.join([
-                '❗Ты не можешь приглашать пользователей, так как сам не состоишь в списке😔',
+                '❗Ты не можешь приглашать пользователей, так как сам не состоишь в списке.',
                 'Можешь создать список <code>/create_list</code> и потом отправить инвайты.'
             ])
         )
@@ -86,7 +87,7 @@ async def join_to_list(message: types.Message):
     message_args = message.get_args()
     if not message_args:
         await message.answer(
-            '❗Для присоединения к совместному списку покупок, запроси инвайт.'
+            '❗Для присоединения к совместному списку покупок, запроси инвайт📲'
         )
     else:
         try:
@@ -116,11 +117,8 @@ async def join_to_list(message: types.Message):
                     await message.answer(
                         text='\n'.join([
                             f'Отлично!🥳',
-                            f' Теперь ты можешь добавлять необходимые позиции в общий список покупок с '
-                            f'{users_in_list_text}.',
-                            f'Для добавления позиции воспользуйся командой <code>/add *name*</code>, где <code>*name*</code>'
-                            f' замени на название позиции.',
-                            f'Например <code>/add молоко</code>'
+                            f'Теперь ты можешь добавлять необходимые позиции в общий список покупок с '
+                            f'{users_in_list_text}'
                         ])
                     )
                     #рассылкаем друзьям уведомление о присоединении нового человека
@@ -160,7 +158,7 @@ async def join_to_list(message: types.Message):
                         ])
                     )
             else: # если аргумент-список покупок неверный
-                await message.answer('❗Такого общего списка покупок не существует.')
+                await message.answer('❗Такого общего списка покупок не существует')
 
 
 async def quit_from_list(message: types.Message):
@@ -174,7 +172,7 @@ async def quit_from_list(message: types.Message):
         await message.answer(
             text='\n'.join([
                 '✔Ты успешно вышел из списка!',
-                'Если ты сделал это по ошибке, попроси прислать тебе повторный инвайт.'
+                'Если ты сделал это по ошибке, попроси прислать тебе повторный инвайт📲'
             ])
         )
         # определяем имя вышедшего пользователя и уведомляем друзей
@@ -199,7 +197,7 @@ async def quit_from_list(message: types.Message):
         ])
         await useful_funcs.send_message_to_admin(text_for_admin)
     else:
-        await message.answer('❗Ты и так не состоишь в списке.')
+        await message.answer('❗Ты и так не состоишь в списке')
 
 
 async def show_list_participants(message: types.Message):
@@ -208,40 +206,13 @@ async def show_list_participants(message: types.Message):
     if is_user_in_list:
         users_in_list_text = await useful_funcs.get_list_users(tg_id=message.from_user.id)
         if users_in_list_text:
-            answer_text = f'👨‍👩‍👧‍👦Ты состоишь в списке с {users_in_list_text}.'
+            answer_text = f'👨‍👩‍👧‍👦Ты состоишь в списке с {users_in_list_text}'
         else:
-            answer_text = '❗Ты — единственный участник списка.'
+            answer_text = '❗Ты — единственный участник списка'
     else:
-        answer_text = '❗Ты не состоишь в списке.'
+        answer_text = '❗Ты не состоишь в списке'
     await message.answer(text=answer_text)
 
-
-async def add_item(message: types.Message):
-    is_user_in_list = await db.count_user_lists(tg_id=message.from_user.id)
-    if is_user_in_list:
-        items = message.get_args().split()
-        if items:
-            list_id = await db.get_list_id(tg_id=message.from_user.id)
-            added_items = []
-            for item_nm in items:
-                added_item = await db.add_item(list_id=list_id, item_nm=item_nm)
-                item_dict = dict(added_item)
-                added_items.append(item_dict['item_nm'])
-            added_items_text = '\n  ▫'.join(added_items)
-            await message.answer(
-                text=f'➕Добавлено в список:\n'
-                     f'  ▫{added_items_text}'
-            )
-        else:
-            await message.answer(
-                text='\n'.join([
-                    '❗Для добавления позиций в список, необходимо перечислить их <b><u>через пробел</u></b> '
-                    'после команды <code>/add</code>.',
-                    'Например: <code>/add молоко хлеб пивко</code>'
-                ])
-            )
-    else:
-        await message.answer('❗Ты не состоишь в списке, добавить позицию не получится.')
 
 @dp.callback_query_handler(items_cd.filter())
 async def delete_item(call: types.CallbackQuery, callback_data: dict):
@@ -258,7 +229,7 @@ async def delete_item(call: types.CallbackQuery, callback_data: dict):
         if updated_reply_markup.inline_keyboard:
             await call.message.edit_reply_markup(updated_reply_markup)
         else:
-            await call.message.edit_text('🛒Список покупок пуст.')
+            await call.message.edit_text('🛒Список покупок пуст')
     except TypeError:
         await call.answer(
             text='➖Эта позиция уже удалена',
@@ -270,7 +241,7 @@ async def delete_item(call: types.CallbackQuery, callback_data: dict):
         if updated_reply_markup.inline_keyboard:
             await call.message.edit_reply_markup(updated_reply_markup)
         else:
-            await call.message.edit_text('🛒Список покупок пуст.')
+            await call.message.edit_text('🛒Список покупок пуст')
 
 
 @dp.callback_query_handler(text='delete')
@@ -279,13 +250,13 @@ async def delete_all_list(call: types.CallbackQuery):
     await db.clear_shopping_list(list_id=list_id)
 
     await call.answer(
-        text='❗Список покупок полностью очищен.',
+        text='❗Список покупок полностью очищен',
         show_alert=True,
         cache_time=10
     )
 
     await call.message.edit_reply_markup(reply_markup=None)
-    await call.message.edit_text('🛒Список покупок пуст.')
+    await call.message.edit_text('🛒Список покупок пуст')
 
 
 
@@ -300,9 +271,31 @@ async def show_list(message: types.Message):
                 reply_markup=reply_markup
             )
         else:
-            await message.answer('🛒Список покупок пуст.')
+            await message.answer('🛒Список покупок пуст')
     else:
-        await message.answer('❗Ты не состоишь в списке.')
+        await message.answer('❗Ты не состоишь в списке')
+
+
+async def add_item(message: types.Message):
+    is_user_in_list = await db.count_user_lists(tg_id=message.from_user.id)
+    if is_user_in_list:
+        try:
+            items = message.text.split(',')
+            list_id = await db.get_list_id(tg_id=message.from_user.id)
+            added_items = []
+            for item_nm in items:
+                added_item = await db.add_item(list_id=list_id, item_nm=item_nm.strip())
+                item_dict = dict(added_item)
+                added_items.append(item_dict['item_nm'])
+            added_items_text = '\n  ▫'.join(added_items)
+            await message.answer(
+                text=f'➕Добавлено в список:\n'
+                     f'  ▫{added_items_text}'
+            )
+        except:
+            await message.answer('❗Что-то пошло не так, но что...')
+    else:
+        await message.answer('❗Ты не состоишь в списке, добавить позицию не получится')
 
 def register_shopping_list(dp: Dispatcher):
     dp.register_message_handler(create_new_list, commands=['create_list'])
@@ -310,5 +303,5 @@ def register_shopping_list(dp: Dispatcher):
     dp.register_message_handler(join_to_list, Private_chat_filter(), commands=['join'])
     dp.register_message_handler(quit_from_list, Private_chat_filter(), commands=['quit'])
     dp.register_message_handler(show_list_participants, commands=['show_mates'])
-    dp.register_message_handler(add_item, commands=['add'])
     dp.register_message_handler(show_list, commands=['show_list'])
+    dp.register_message_handler(add_item)
