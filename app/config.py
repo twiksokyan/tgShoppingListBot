@@ -6,7 +6,7 @@ env.read_env()
 
 BOT_TOKEN = env.str("BOT_TOKEN")
 admins = env.list("ADMINS", subcast=int)
-IP = env.str("ip")
+IP = env.str("IP")
 
 # for DB
 DB_USER = env.str("DB_USER") # имя пользователя (twiksokyan)
