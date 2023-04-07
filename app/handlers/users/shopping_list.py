@@ -275,6 +275,12 @@ async def refresh_list(call: types.CallbackQuery):
                 text='❗Список покупок не менялся',
                 cache_time=10
             )
+    else:
+        await call.answer(
+            text='❗Список покупок обновлен',
+            cache_time=10
+        )
+        await call.message.edit_text('🛒Список покупок пуст')
 
 
 async def show_list(message: types.Message):
