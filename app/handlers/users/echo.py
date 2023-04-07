@@ -3,7 +3,6 @@ from aiogram import types, Dispatcher
 
 async def bot_echo(message: types.Message):
     # print(message.text)
-    # await message.answer(message.text)
     pass
 
 def register_echo(dp: Dispatcher):

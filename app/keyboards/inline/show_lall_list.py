@@ -27,8 +27,14 @@ async def generate_items_list(list_id):
             )
         keyboard.row(
             InlineKeyboardButton(
-                text='Удалить ФСЁ!',
+                text='Очистить 🗑️',
                 callback_data='delete'
+            )
+        )
+        keyboard.row(
+            InlineKeyboardButton(
+                text='Обновить 🔄',
+                callback_data='refresh'
             )
         )
 

@@ -1,4 +1,5 @@
 from aiogram import types, Dispatcher
+from aiogram.utils.exceptions import MessageNotModified
 
 from app.keyboards.inline.show_lall_list import generate_items_list, items_cd
 from app.loader import db, dp
@@ -258,6 +259,22 @@ async def delete_all_list(call: types.CallbackQuery):
     await call.message.edit_reply_markup(reply_markup=None)
     await call.message.edit_text('🛒Список покупок пуст')
 
+@dp.callback_query_handler(text='refresh')
+async def refresh_list(call: types.CallbackQuery):
+    list_id = await db.get_list_id(tg_id=call.from_user.id)
+    refreshed_reply_markup = await generate_items_list(list_id=list_id)
+    if refreshed_reply_markup.inline_keyboard:
+        try:
+            await call.message.edit_reply_markup(reply_markup=refreshed_reply_markup)
+            await call.answer(
+                text='❗Список покупок обновлен',
+                cache_time=10
+            )
+        except MessageNotModified:
+            await call.answer(
+                text='❗Список покупок не менялся',
+                cache_time=10
+            )
 
 
 async def show_list(message: types.Message):
