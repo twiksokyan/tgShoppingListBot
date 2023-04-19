@@ -1,7 +1,7 @@
 from aiogram import types, Dispatcher
 from aiogram.utils.exceptions import MessageNotModified
 
-from app.keyboards.inline.show_lall_list import generate_items_list, items_cd
+from app.keyboards.inline.show_lall_list import generate_items_list, items_cd, refresh_keyboard
 from app.loader import db, dp
 from app.filters.chat_filter import Private_chat_filter
 from app.utils.misc import useful_funcs
@@ -231,6 +231,7 @@ async def delete_item(call: types.CallbackQuery, callback_data: dict):
             await call.message.edit_reply_markup(updated_reply_markup)
         else:
             await call.message.edit_text('🛒Список покупок пуст')
+            await call.message.edit_reply_markup(reply_markup=refresh_keyboard)
     except TypeError:
         await call.answer(
             text='➖Эта позиция уже удалена',
@@ -243,6 +244,7 @@ async def delete_item(call: types.CallbackQuery, callback_data: dict):
             await call.message.edit_reply_markup(updated_reply_markup)
         else:
             await call.message.edit_text('🛒Список покупок пуст')
+            await call.message.edit_reply_markup(reply_markup=refresh_keyboard)
 
 
 @dp.callback_query_handler(text='delete')
@@ -256,8 +258,8 @@ async def delete_all_list(call: types.CallbackQuery):
         cache_time=10
     )
 
-    await call.message.edit_reply_markup(reply_markup=None)
     await call.message.edit_text('🛒Список покупок пуст')
+    await call.message.edit_reply_markup(reply_markup=refresh_keyboard)
 
 @dp.callback_query_handler(text='refresh')
 async def refresh_list(call: types.CallbackQuery):
@@ -281,6 +283,7 @@ async def refresh_list(call: types.CallbackQuery):
             cache_time=10
         )
         await call.message.edit_text('🛒Список покупок пуст')
+        await call.message.edit_reply_markup(reply_markup=refresh_keyboard)
 
 
 async def show_list(message: types.Message):
@@ -294,7 +297,10 @@ async def show_list(message: types.Message):
                 reply_markup=reply_markup
             )
         else:
-            await message.answer('🛒Список покупок пуст')
+            await message.answer(
+                text='🛒Список покупок пуст',
+                reply_markup=refresh_keyboard
+            )
     else:
         await message.answer('❗Ты не состоишь в списке')
 

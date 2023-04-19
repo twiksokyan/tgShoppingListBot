@@ -39,3 +39,15 @@ async def generate_items_list(list_id):
         )
 
     return keyboard
+
+refresh_keyboard = InlineKeyboardMarkup(
+    row_width=1,
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text='Обновить 🔄',
+                callback_data='refresh'
+            )
+        ]
+    ]
+)
