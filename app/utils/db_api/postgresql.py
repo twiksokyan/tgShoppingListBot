@@ -120,6 +120,13 @@ class Database:
 
         return await self.execute_query(query, tg_id, fetchval=True)
 
+    async def count_list_users(self, list_id):
+        query = """
+        SELECT COUNT(TG_ID) FROM USERS_LISTS WHERE LIST_ID = $1
+        """
+
+        return await self.execute_query(query, list_id, fetchval=True)
+
     async def get_list_users(self, tg_id):
         """Выбираем всех пользователей списка по любому пользователю из этого списка"""
         list_id = await self.get_list_id(tg_id)
@@ -142,21 +149,6 @@ class Database:
         """
 
         return await self.execute_query(query, tg_id, fetchrow=True)
-
-    # async def delete_list(self, tg_id):
-    #     """Удаление списка. Может сделать только админ"""
-    #     query_find = """
-    #     SELECT LIST_ID FROM USERS_LISTS WHERE TG_ID = $1
-    #     """
-    #     list_id_for_delete = await self.execute_query(query_find, tg_id, fetchval=True)
-    #
-    #     if list_id_for_delete:
-    #         query_del = """
-    #         DELETE FROM USERS_LISTS WHERE LIST_ID = $1
-    #         """
-    #         await self.execute_query(query_del, list_id_for_delete, execute=True)
-    #     else:
-    #         return -1
 
     # Таблица наполнения списка покупок
     async def create_table_shopping_lists(self):

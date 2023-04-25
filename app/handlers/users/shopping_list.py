@@ -308,21 +308,26 @@ async def show_list(message: types.Message):
 async def add_item(message: types.Message):
     is_user_in_list = await db.count_user_lists(tg_id=message.from_user.id)
     if is_user_in_list:
-        try:
-            items = message.text.split(',')
-            list_id = await db.get_list_id(tg_id=message.from_user.id)
-            added_items = []
-            for item_nm in items:
-                added_item = await db.add_item(list_id=list_id, item_nm=item_nm.strip())
-                item_dict = dict(added_item)
-                added_items.append(item_dict['item_nm'])
-            added_items_text = '\n  ▫'.join(added_items)
-            await message.answer(
-                text=f'➕Добавлено в список:\n'
-                     f'  ▫{added_items_text}'
-            )
-        except:
-            await message.answer('❗Что-то пошло не так, но что...')
+        list_id = await db.get_list_id(tg_id=message.from_user.id)
+        users_in_list = await db.count_list_users(list_id=list_id)
+        if users_in_list > 1:
+            try:
+                items = message.text.split(',')
+
+                added_items = []
+                for item_nm in items:
+                    added_item = await db.add_item(list_id=list_id, item_nm=item_nm.strip())
+                    item_dict = dict(added_item)
+                    added_items.append(item_dict['item_nm'])
+                added_items_text = '\n  ▫'.join(added_items)
+                await message.answer(
+                    text=f'➕Добавлено в список:\n'
+                         f'  ▫{added_items_text}'
+                )
+            except:
+                await message.answer('❗Что-то пошло не так, но что...')
+        else:
+            await message.answer('❗Вести список <i>solo</i> не получится. Перечитай правила <code>/help</code>')
     else:
         await message.answer('❗Ты не состоишь в списке, добавить позицию не получится')
 
